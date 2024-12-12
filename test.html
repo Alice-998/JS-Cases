@@ -44,13 +44,13 @@
                         fillColor: 'lightblue', // 填充颜色
                         fillOpacity: 0.5, // 填充透明度
                         weight: 1 // 边界线宽度
-                    }),
+                    }), 
                     onEachFeature: (feature, layer) => {
                         // 为每个要素添加弹出框
                         if (feature.properties && feature.properties.name) {
                             layer.bindPopup(`<strong>${feature.properties.name}</strong>`);
                         } else {
-                            layer.bindPopup("未命名区域");
+                            layer.bindPopup('未命名区域');
                         }
                     }
                 }).addTo(map);
