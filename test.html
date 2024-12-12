@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GeoJSON数据展示</title>
+    <title>GeoJSON数据展示 (MultiPolygon)</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         #map {
@@ -17,7 +17,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         // 初始化地图
-        const map = L.map('map').setView([28.753, 104.648], 10); // 中心点为旧金山
+        const map = L.map('map').setView([37.7749, -122.4194], 10); // 初始中心点为旧金山
 
         // 添加OpenStreetMap瓦片图层
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -25,21 +25,41 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-        // 使用Fetch API加载GeoJSON数据
-        fetch('https://geojson.cn/api/china/510000/511500.json')
-            .then(response => response.json())  // 将响应数据解析为JSON
+        // GeoJSON数据的URL
+        const geojsonUrl = 'https://raw.githubusercontent.com/Alice-998/JS-Cases/refs/heads/main/511500.geojson'; // 替换为实际的GeoJSON文件URL
+
+        // 加载GeoJSON数据
+        fetch(geojsonUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('网络响应错误：' + response.statusText);
+                }
+                return response.json();
+            })
             .then(geojsonData => {
-                // 加载GeoJSON数据并添加到地图
+                // 使用GeoJSON数据在地图上显示
                 L.geoJSON(geojsonData, {
+                    style: () => ({
+                        color: 'blue', // 多边形边界颜色
+                        fillColor: 'lightblue', // 填充颜色
+                        fillOpacity: 0.5, // 填充透明度
+                        weight: 1 // 边界线宽度
+                    }),
                     onEachFeature: (feature, layer) => {
+                        // 为每个要素添加弹出框
                         if (feature.properties && feature.properties.name) {
-                            layer.bindPopup(`<b>${feature.properties.name}</b>`);
+                            layer.bindPopup(`<strong>${feature.properties.name}</strong>`);
+                        } else {
+                            layer.bindPopup("未命名区域");
                         }
                     }
                 }).addTo(map);
+
+                // 自动缩放到GeoJSON数据范围
+                map.fitBounds(L.geoJSON(geojsonData).getBounds());
             })
             .catch(error => {
-                console.error('加载GeoJSON数据时出错:', error);
+                console.error('加载GeoJSON数据时出错：', error);
             });
     </script>
 </body>
