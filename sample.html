@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GeoJSON数据展示-本地</title>
+    <title>sample</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         #map {
@@ -26,7 +26,7 @@
         }).addTo(map);
 
         // GeoJSON数据的URL
-        const geojsonUrl = '510100.geojson'; // 替换为实际的GeoJSON文件URL
+        const geojsonUrl = 'https://raw.githubusercontent.com/Alice-998/JS-Cases/refs/heads/main/511500.geojson'; // 替换为实际的GeoJSON文件URL
 
         // 加载GeoJSON数据
         fetch(geojsonUrl)
