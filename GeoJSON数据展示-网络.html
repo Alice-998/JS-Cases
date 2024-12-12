@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoJSON数据展示-网络</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <style>
+      #map {
+        height: 100vh;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const map = L.map('map').setView([28.758, 104.628], 10);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        const geojsonUrl = 'https://raw.githubusercontent.com/Alice-998/JS-Cases/refs/heads/main/511500.geojson';
+
+        fetch(geojsonUrl)
+          .then ( response => {
+            if (!response.ok) {
+              throw new Error('网络相应错误:' + response.statusText);
+            }
+            return response.json();
+          })
+
+          .then (geojsonData => {
+            L.geoJSON(geojsonData, {
+              style: () => ({
+                color: 'blue',
+                weight: 1,
+                fillColor: 'lightblue',
+                fillOpacity: 0.5
+              }),
+              onEachFeature: (feature, layer) => {
+                if (feature.properties && feature.properties.name) {
+                  layer.bindPopup(`<strong>${feature.properties.name}</strong>`);
+                } else {
+                  layer.bindPopup('未命名区域');
+                }
+              }
+            }).addTo(map);
+
+            map.fitBounds(L.geoJSON(geojsonData).getBounds());
+          })
+
+          .catch(error => {
+            console.error('加载GeoJSON数据时出错:', error);
+          })
+    </script>
+  </body>
+</html>
