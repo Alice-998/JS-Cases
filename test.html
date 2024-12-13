@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>点查询与删除示例</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 90vh;
+        }
+        .leaflet-popup-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .delete-btn {
+            margin-top: 10px;
+            padding: 5px 10px;
+            background-color: red;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        .delete-btn:hover {
+            background-color: darkred;
+        }
+        #clearAllBtn {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 10px 20px;
+            background-color: green;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 1000;
+        }
+        #clearAllBtn:hover {
+            background-color: darkgreen;
+        }
+    </style>
+</head>
+<body>
+    <button id="clearAllBtn">一键删除所有标记</button>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // 初始化地图，设置中心点和缩放级别
+        const map = L.map('map').setView([37.7749, -122.4194], 13); // 设置中心点为旧金山
+
+        // 添加OpenStreetMap瓦片图层
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // 存储所有标记的数组
+        let markers = [];
+
+        // 从localStorage加载标记
+        function loadMarkers() {
+            const savedMarkers = JSON.parse(localStorage.getItem('markers')) || [];
+            savedMarkers.forEach(function(markerData) {
+                createMarker(markerData.lat, markerData.lng);
+            });
+        }
+
+        // 创建一个标记，带有弹出框和删除功能
+        function createMarker(lat, lng) {
+            const marker = L.marker([lat, lng]).addTo(map);
+
+            // 创建弹出框内容，包括坐标和删除按钮
+            const popupContent = `
+                <b>点击位置</b><br>经度: ${lng.toFixed(4)}<br>纬度: ${lat.toFixed(4)}
+                <button class="delete-btn">删除这个点</button>
+            `;
+            marker.bindPopup(popupContent);
+
+            // 为删除按钮添加点击事件
+            marker.getPopup().on('contentupdate', function () {
+                const deleteBtn = marker.getPopup().getElement().querySelector('.delete-btn');
+                if (deleteBtn) {
+                    deleteBtn.addEventListener('click', function () {
+                        // 删除标记和弹出框
+                        map.removeLayer(marker);
+                        // 从标记数组中移除该标记
+                        markers = markers.filter(m => m !== marker);
+                        // 更新localStorage
+                        saveMarkers();
+                    });
+                }
+            });
+
+            // 为标记添加鼠标悬停事件，显示坐标
+            marker.on('mouseover', function() {
+                marker.openPopup(); // 鼠标悬停时打开弹出框
+            });
+
+            // 为标记添加鼠标移出事件，关闭坐标显示
+            marker.on('mouseout', function() {
+                marker.closePopup(); // 鼠标移出时关闭弹出框
+            });
+
+            // 为标记添加点击事件，删除标记
+            marker.on('click', function() {
+                // 点击已标记点时删除该标记
+                map.removeLayer(marker);
+                markers = markers.filter(m => m !== marker);
+                saveMarkers();
+            });
+
+            // 将标记添加到标记数组
+            markers.push(marker);
+
+            // 保存标记到localStorage
+            saveMarkers();
+        }
+
+        // 保存标记到localStorage
+        function saveMarkers() {
+            const savedMarkers = markers.map(marker => {
+                const latLng = marker.getLatLng();
+                return { lat: latLng.lat, lng: latLng.lng };
+            });
+            localStorage.setItem('markers', JSON.stringify(savedMarkers));
+        }
+
+        // 监听用户点击地图事件
+        map.on('click', function(event) {
+            const lat = event.latlng.lat; // 获取点击位置的纬度
+            const lng = event.latlng.lng; // 获取点击位置的经度
+
+            // 创建并添加新标记
+            createMarker(lat, lng);
+        });
+
+        // 一键删除所有标记的功能
+        document.getElementById('clearAllBtn').addEventListener('click', function() {
+            markers.forEach(function(marker) {
+                // 从地图中删除标记
+                map.removeLayer(marker);
+            });
+            // 清空标记数组
+            markers.length = 0;
+            // 清除localStorage中的标记
+            localStorage.removeItem('markers');
+        });
+
+        // 页面加载时加载已有的标记
+        loadMarkers();
+    </script>
+</body>
+</html>
